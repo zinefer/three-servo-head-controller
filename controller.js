@@ -390,6 +390,9 @@
     let playbackStartTime = 0;
     let playbackTimer = null;
 
+    // Queued eyes state for batching with servo updates
+    let queuedEyesChange = null;
+
     // Transform joystick X/Y to differential servo values
     function transformJoystick(x, y) {
         // x and y are in range -100 to 100
@@ -425,6 +428,12 @@
     // Send update to ESP32
     function sendUpdate() {
         if (pendingRequest) return;
+        
+        // Apply any queued eyes change before checking if values changed
+        if (queuedEyesChange !== null) {
+            currentValues.eyes = queuedEyesChange;
+            queuedEyesChange = null;
+        }
         
         // Check if values have changed
         if (currentValues.servo1 === lastSentValues.servo1 &&
@@ -647,7 +656,17 @@
     const eyesToggle = document.getElementById('eyesToggle');
     
     function toggleEyes() {
-        currentValues.eyes = !currentValues.eyes;
+        const newEyesState = !currentValues.eyes;
+        
+        // If in autonomous mode, queue the change to be sent with next servo update
+        if (autonomousMode) {
+            queuedEyesChange = newEyesState;
+        } else {
+            // Otherwise, apply immediately
+            currentValues.eyes = newEyesState;
+        }
+        
+        // Update UI immediately regardless
         eyesToggle.classList.toggle('active');
     }
     
