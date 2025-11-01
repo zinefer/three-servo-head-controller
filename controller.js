@@ -495,10 +495,21 @@
         autonomousTimer = setTimeout(() => {
             if (!autonomousMode) return;
             
-            // Set random positions
-            currentValues.servo1 = Math.round(30 + Math.random() * 120); // 30-150
-            currentValues.servo2 = Math.round(30 + Math.random() * 120); // 30-150
-            currentValues.servo3 = Math.round(30 + Math.random() * 120); // 30-150
+            // Helper function to get a random position far from current
+            const getDistantPosition = (current) => {
+                // Minimum delta of 60 degrees for significant movement
+                const minDelta = 60;
+                let newPos;
+                do {
+                    newPos = Math.round(Math.random() * 180);
+                } while (Math.abs(newPos - current) < minDelta);
+                return newPos;
+            };
+            
+            // Set random positions that are far from current positions
+            currentValues.servo1 = getDistantPosition(currentValues.servo1);
+            currentValues.servo2 = getDistantPosition(currentValues.servo2);
+            currentValues.servo3 = getDistantPosition(currentValues.servo3);
             
             // Update UI
             updateSliderFromValue(currentValues.servo1);
