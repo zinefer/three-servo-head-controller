@@ -381,9 +381,6 @@
     // Autonomous mode state
     let autonomousMode = false;
     let autonomousTimer = null;
-    let autonomousTargets = { servo1: 90, servo2: 90, servo3: 90 };
-    let autonomousCurrent = { servo1: 90, servo2: 90, servo3: 90 };
-    let autonomousSpeed = 0.02; // Interpolation speed
 
     // Recording state
     let isRecording = false;
@@ -478,58 +475,38 @@
     // ===== AUTONOMOUS MODE =====
     function startAutonomousMode() {
         autonomousMode = true;
-        setRandomTargets();
-        
-        if (autonomousTimer) clearInterval(autonomousTimer);
-        autonomousTimer = setInterval(() => {
-            // Smoothly interpolate towards targets
-            autonomousCurrent.servo1 += (autonomousTargets.servo1 - autonomousCurrent.servo1) * autonomousSpeed;
-            autonomousCurrent.servo2 += (autonomousTargets.servo2 - autonomousCurrent.servo2) * autonomousSpeed;
-            autonomousCurrent.servo3 += (autonomousTargets.servo3 - autonomousCurrent.servo3) * autonomousSpeed;
-            
-            // Update current values (disable manual control)
-            currentValues.servo1 = Math.round(autonomousCurrent.servo1);
-            currentValues.servo2 = Math.round(autonomousCurrent.servo2);
-            currentValues.servo3 = Math.round(autonomousCurrent.servo3);
-            
-            // Update UI
-            updateSliderFromValue(currentValues.servo1);
-            updateJoystickFromValues(currentValues.servo2, currentValues.servo3);
-            
-            // Check if close to target, set new random target
-            const dist1 = Math.abs(autonomousTargets.servo1 - autonomousCurrent.servo1);
-            const dist2 = Math.abs(autonomousTargets.servo2 - autonomousCurrent.servo2);
-            const dist3 = Math.abs(autonomousTargets.servo3 - autonomousCurrent.servo3);
-            
-            if (dist1 < 2 && dist2 < 2 && dist3 < 2) {
-                setRandomTargets();
-            }
-        }, 50);
+        scheduleNextRandomMove();
     }
     
     function stopAutonomousMode() {
         autonomousMode = false;
         if (autonomousTimer) {
-            clearInterval(autonomousTimer);
+            clearTimeout(autonomousTimer);
             autonomousTimer = null;
         }
     }
     
-    function setRandomTargets() {
-        // Random targets with preference for slower, more natural movements
-        // Bias towards center for more subtle movements
-        const randomInRange = (min, max, centerBias = 0.3) => {
-            const center = (min + max) / 2;
-            if (Math.random() < centerBias) {
-                // Bias towards center range
-                return center + (Math.random() - 0.5) * (max - min) * 0.5;
-            }
-            return min + Math.random() * (max - min);
-        };
+    function scheduleNextRandomMove() {
+        if (!autonomousMode) return;
         
-        autonomousTargets.servo1 = randomInRange(30, 150);
-        autonomousTargets.servo2 = randomInRange(30, 150);
-        autonomousTargets.servo3 = randomInRange(30, 150);
+        // Random delay between 400ms and 2000ms
+        const delay = 400 + Math.random() * 1600;
+        
+        autonomousTimer = setTimeout(() => {
+            if (!autonomousMode) return;
+            
+            // Set random positions
+            currentValues.servo1 = Math.round(30 + Math.random() * 120); // 30-150
+            currentValues.servo2 = Math.round(30 + Math.random() * 120); // 30-150
+            currentValues.servo3 = Math.round(30 + Math.random() * 120); // 30-150
+            
+            // Update UI
+            updateSliderFromValue(currentValues.servo1);
+            updateJoystickFromValues(currentValues.servo2, currentValues.servo3);
+            
+            // Schedule next move
+            scheduleNextRandomMove();
+        }, delay);
     }
     
     function updateSliderFromValue(value) {
