@@ -498,27 +498,17 @@
     function scheduleNextRandomMove() {
         if (!autonomousMode) return;
         
-        // Random delay between 400ms and 2000ms
-        const delay = 400 + Math.random() * 1600;
+        // Random delay between 200ms and 2000ms for faster, more erratic movement
+        const delay = 200 + Math.random() * 1800;
         
         autonomousTimer = setTimeout(() => {
             if (!autonomousMode) return;
             
-            // Helper function to get a random position far from current
-            const getDistantPosition = (current) => {
-                // Minimum delta of 60 degrees for significant movement
-                const minDelta = 60;
-                let newPos;
-                do {
-                    newPos = Math.round(Math.random() * 180);
-                } while (Math.abs(newPos - current) < minDelta);
-                return newPos;
-            };
-            
-            // Set random positions that are far from current positions
-            currentValues.servo1 = getDistantPosition(currentValues.servo1);
-            currentValues.servo2 = getDistantPosition(currentValues.servo2);
-            currentValues.servo3 = getDistantPosition(currentValues.servo3);
+            // Generate completely random positions (0-180) without constraints
+            // This allows large jumps for dramatic, fast spooky movement
+            currentValues.servo1 = Math.round(Math.random() * 180);
+            currentValues.servo2 = Math.round(Math.random() * 180);
+            currentValues.servo3 = Math.round(Math.random() * 180);
             
             // Update UI
             updateSliderFromValue(currentValues.servo1);
